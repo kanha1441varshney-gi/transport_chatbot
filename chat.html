@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🚌 Smart Transport Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .dashboard {
+      width: 95%;
+      max-width: 1100px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+    }
+    .sidebar {
+      background: #4CAF50;
+      color: white;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .sidebar h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .sidebar button {
+      background: white;
+      color: #4CAF50;
+      border: none;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 16px;
+    }
+    .sidebar button:hover {
+      background: #45a049;
+      color: white;
+      transform: scale(1.05);
+    }
+    .main {
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background: #2a5298;
+      color: white;
+      padding: 15px;
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .cards {
+      display: flex;
+      justify-content: space-around;
+      padding: 15px;
+      background: #f0f4f7;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 15px;
+      width: 23%;
+      text-align: center;
+      transition: 0.3s;
+    }
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #f9f9f9;
+    }
+    .message {
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 12px;
+      max-width: 70%;
+      font-size: 15px;
+      animation: fadeIn 0.5s ease-in;
+    }
+    .user {
+      background: #DCF8C6;
+      align-self: flex-end;
+    }
+    .bot {
+      background: #E5E5EA;
+      align-self: flex-start;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    .input-area {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      outline: none;
+      font-size: 15px;
+    }
+    .input-area button {
+      background: #2a5298;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .input-area button:hover {
+      background: #1e3c72;
+      transform: scale(1.1);
+      box-shadow: 0 0 10px #1e3c72;
+    }
+    .mic-btn {
+      background: #f44336;
+      color: white;
+      border: none;
+      padding: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .mic-btn:hover {
+      background: #d32f2f;
+      transform: scale(1.1);
+    }
+    @media (max-width: 600px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+        width: 100%;
+        height: 100%;
+      }
+      .cards {
+        flex-direction: column;
+        align-items: center;
+      }
+      .card {
+        width: 80%;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="sidebar">
+      <h2>Menu</h2>
+      <button onclick="quickQuery('bus info')">🚌 Bus Info</button>
+      <button onclick="quickQuery('train info')">🚆 Train Info</button>
+      <button onclick="quickQuery('nearby stops')">📍 Nearby Stops</button>
+      <button onclick="quickQuery('settings')">⚙ Settings</button>
+      <button onclick="quickQuery('time')">🕒 Current Time</button>
+    </div>
+    <div class="main">
+      <div class="header">🚌 Smart Transport Assistant</div>
+      <div class="cards">
+        <div class="card"><h3>🚌 Next Bus</h3><p id="busCard">Route 101 at 5:30 PM</p></div>
+        <div class="card"><h3>🚆 Next Train</h3><p id="trainCard">Express 202 at 6:00 PM</p></div>
+        <div class="card"><h3>☀ Weather</h3><p id="weatherCard">Clear, 28°C</p></div>
+        <!-- ✅ New Time Card -->
+        <div class="card"><h3>🕒 Current Time</h3><p id="timeCard">Loading...</p></div>
+      </div>
+      <div class="messages" id="chatbox"></div>
+      <div class="input-area">
+        <input type="text" id="userInput" placeholder="Type your query...">
+        <button onclick="sendMessage()">Send</button>
+        <button class="mic-btn" onclick="startVoice()">🎤</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function sendMessage() {
+      let userText = document.getElementById("userInput").value;
+      if (userText.trim() === "") return;
+
+      let chatbox = document.getElementById("chatbox");
+
+      let userMsg = document.createElement("div");
+      userMsg.className = "message user";
+      userMsg.innerText = userText;
+      chatbox.appendChild(userMsg);
+
+      fetch("/get", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "msg=" + encodeURIComponent(userText)
+      })
+      .then(response => response.text())
+      .then(data => {
+        let botMsg = document.createElement("div");
+        botMsg.className = "message bot";
+        botMsg.innerText = data;
+        chatbox.appendChild(botMsg);
+        chatbox.scrollTop = chatbox.scrollHeight;
+
+        // ✅ Update Time Card if response contains IST time
+        if (data.includes("IST Time")) {
+          document.getElementById("timeCard").innerText = data.replace("🕒 Current IST Time: ", "");
+        }
+
+        // Text-to-Speech
+        let speech = new SpeechSynthesisUtterance(data);
+        window.speechSynthesis.speak(speech);
+      });
+
+      document.getElementById("userInput").value = "";
+    }
+
+    function quickQuery(queryText) {
+      document.getElementById("userInput").value = queryText;
+      sendMessage();
+    }
+
+    function startVoice() {
+      let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "en-US";
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        let voiceText = event.results[0][0].transcript;
+        document.getElementById("userInput").value = voiceText;
+        sendMessage();
+      };
+    }
+
+    // ✅ Auto-refresh Time Card every 30 seconds
+    setInterval(() => {
+      quickQuery("time");
+    }, 30000);
+  </script>
+</body>
+</html>
